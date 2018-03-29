@@ -407,7 +407,12 @@
 
             var href = item.url || "javascript:void(0);",
                 $div = $('<div />', { "class": classes.join(" "), "style": item.style || ""}),
-                $a = $('<a />', { "href": href, "class": "org-chart-link", "title": item.description || "" }),
+                $a = $('<a />', {
+                    "href": href,
+                    "class": "org-chart-link",
+                    "title": item.description || "",
+                    "target": item.urlTarget || "_parent"
+                }),
                 $label = $('<div />', { "class": "org-chart-title" }).text(item.title || "");
 
             // keep key and parent metadata
@@ -1060,6 +1065,7 @@
                 "parent": "",       // Required. parent key/id (leave empty if this is the top node)
                 "title": "",        // Optional. display title
                 "url": "",          // Optional. leaf anchor href value
+                "urlTarget": "",    // Optional. leaf anchor target. default: "_parent"
                 "description": "",  // Optional. leaf anchor title value
                 "style": "",        // Optional. leaf style
                 "class": "",        // Optional. leaf class
