@@ -17,6 +17,23 @@
 .org-chart-subbranch {
   display: inline-block;
   padding: 0 0 0 15px; }
+  .org-chart-subbranch .org-chart-leaf {
+    background: #9e00eb;
+    /* Old browsers */
+    background: -moz-linear-gradient(top, #9e00eb 0%, #5800a5 100%);
+    /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #9e00eb), color-stop(100%, #5800a5));
+    /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, #9e00eb 0%, #5800a5 100%);
+    /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, #9e00eb 0%, #5800a5 100%);
+    /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #9e00eb 0%, #5800a5 100%);
+    /* IE10+ */
+    background: linear-gradient(to bottom, #9e00eb 0%, #5800a5 100%);
+    /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#000000',GradientType=0 );
+    /* IE6-9 */ }
 
 .org-chart-horizontal .org-chart-tree {
   padding: 0;
@@ -30,7 +47,7 @@
 .org-chart-vertical .org-chart-root {
   padding: 0; }
 
-.org-chart-vertical .org-chart-subbranch > li > .org-chart-branch {
+.org-chart-vertical .org-chart-tree > li > .org-chart-tree:first-of-type {
   padding-left: 150px; }
 
 /**********************/

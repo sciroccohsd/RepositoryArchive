@@ -21,12 +21,14 @@
                 "orientation": "horizontal",
                 "scaleToFit": false,
                 "scale": 1,
-                "gap": 10
+                "gap": 10,
+                "breakOn": 0
             },
             orientation = defaults.orientation,
             scaleToFit = defaults.scaleToFit,
             scale = defaults.scale,
             gap = defaults.gap,
+            breakOn = defaults.breakOn,
             css = {
                 "wrapper": "",
                 "tree": "",
@@ -101,6 +103,12 @@
                     case "padding":
                     case "gap":
                         if (valueType === "number" && value >= 0) gap = value;
+                        break;
+
+                    case "break":
+                    case "breakon":
+                    case "breakOn":
+                        if (valueType === "number" && value >= 2) breakOn = value;
                         break;
 
                     case "class":
@@ -217,8 +225,8 @@
                 .toggleClass("org-chart-vertical", !isHorizontal())
                 .append(svg).append($root);
 
-            // make sure leaves are balanced for sub-branches
-            balanceLeavesOnSubBranches();
+            // make sure leaves are balanced on branches
+            balanceLeavesOnBranches();
 
             // draw connector lines
             drawConnectorLines();
@@ -230,7 +238,7 @@
             /// <summary>Creates the tree and children.</summary>
             /// <param name="items" type="Array">Array of item objects.</param>
             /// <param name="type" type="String">Optional. Type of branch: "root", "branch" or "subbranch". Default: "branch";</param>
-            /// <returns type="Object">jQuery UL element.</returns>
+            /// <returns type="Object">jQuery UL element(s).</returns>
 
             // normalize parameters
             if (typeof type !== "string") type = "branch";
@@ -262,36 +270,52 @@
             classes.push("org-chart-" + type);
             if (css[type]) classes.push(css[type]);
 
-            var $ul = $('<ul />', { "class": classes.join(" ") }),
-                isSubBranch = (type === "subbranch");
+            var $frag = $(document.createDocumentFragment()),
+                isSubBranch = (type === "subbranch"),
+                isLastSet = true,
+                sets = [],
+                tempArr = items.slice(0);
 
-            // loop thru each tree item
-            for (var i = 0; i < items.length; i++) {
-                var $li = createSibling(items[i], isSubBranch);
-                if ($li) $ul.append($li);
-
-                // horizontal sub branches must have even number of leaves
-                if (isHorizontal() && isSubBranch) {
-                    var $li2, parent = items[i].parent;
-                    i++;    // manually move to the next item
-                    // is there another item?
-                    if (items[i]) {
-                        // there is another item
-                        $li2 = createSibling(items[i], isSubBranch);
-                    } else {
-                        // no item, create a hidden leaf to keep subbranches even
-                        $li2 = createSibling({ "key": "", "title": "", "parent": "" }, isSubBranch);
-                        $li2.addClass("org-chart-hidden");
+            // create sets based on row breaks
+            if (breakOn >= 2 && orientation === "horizontal") {
+                var breaks = rowLimits(tempArr.length, breakOn);
+                if (breaks.length === 1) {
+                    sets.push(tempArr);
+                } else {
+                    for (var n = 0; n < breaks.length; n++) {
+                        if (n !== breaks.length - 1) {
+                            sets.unshift(tempArr.splice(breaks[n]));
+                        } else {
+                            sets.unshift(tempArr);
+                        }
                     }
-                    if ($li2) $ul.append($li2);
                 }
+            } else {
+                sets.push(tempArr);
+            }
+
+            // loop thru each set of items
+            for (var i = 0; i < sets.length; i++) {
+
+                isLastSet = (i === sets.length - 1);
+                var set = sets[i],
+                    $ul = $('<ul />', { "class": classes.join(" ") });
+
+                // loop thru each tree item
+                for (var ii = 0; ii < set.length; ii++) {
+                    var $li = createSibling(set[ii], isSubBranch);
+                    if ($li) $ul.append($li);
+
+                }
+                if ($ul.children().length > 0) $frag.append($ul);
             }
 
             executeCallback("createBranch", [items, type, {
-                "$ul": $ul,
+                "$uls": $frag,
                 "isSubBranch": isSubBranch
             }]);
-            if ($ul.children().length > 0) return $ul;
+
+            if ($frag.children().length > 0) return $frag.children();
             return;
         }
         function createSibling(item, isSubBranch) {
@@ -305,53 +329,65 @@
 
             var $li = $('<li />', { "id": id + "-org-chart-item-" + item.key, "class": "org-chart-item " + css.item }),
                 $leaf = createLeaf(item, isSubBranch),
-                $children = createBranch(item.children || [], "branch");
-
-            // convert object of orgChart objects to array of orgChart objects
-            if (!(item.sub instanceof Array) && typeof item.sub === "object") {
-                // is object. 
-                if (item.sub.key) {
-                    // object is an orgChart object
-                    item.sub = [item.sub];
-                } else {
-                    //try to convert values to array
-                    item.sub = Object.values(item.sub);
-                }
-            }
-            if (!(item.sub instanceof Array)) item.sub = [];
+                $subs = makeBranches(item.sub || [], "subbranch"),
+                $children = makeBranches(item.children || [], "branch");
 
             // add leaf to item
             $li.append($leaf);
-
-            // add subbranches to item
-            if (item.sub.length > 0) {
-                // this item has subs
-
-                // is sub array of arrays?
-                if (item.sub[0] instanceof Array) {
-                    // sub is array of arrays
-                    for (var i = 0; i < item.sub.length; i++) {
-                        var $subbranch = createBranch(item.sub[i] || [], "subbranch");
-
-                        if ($subbranch) $li.append($subbranch);
-                    }
-                } else {
-                    // sub is array of objects
-                    var $subbranch = createBranch(item.sub, "subbranch");
-
-                    if ($subbranch) $li.append($subbranch)
-                }
-            }
-
-            // add children to item
+            if ($subs) $li.append($subs);
             if ($children) $li.append($children);
+
 
             executeCallback("createSibling", [item, isSubBranch, $leaf, $li, {
                 "$li": $li,
                 "$leaf": $leaf,
+                "$sub": $subs,
                 "$children": $children
             }]);
             return $li;
+        }
+        function makeBranches(children, type) {
+            /// <summary>Parses the children/sub data to makes one or more branches.</summary>  
+            /// <param name="children" type="Array">Array of org chart objects or array of arrays of org chart objects.</param>  
+            /// <param name="type" type="String">Type of branch. e.g.: "branch" or "subbranch"</param>  
+            /// <returns type="Object">jQuery UL element(s)</returns>
+
+            var $frag = $(document.createDocumentFragment());
+
+            // convert object of orgChart objects to array of orgChart objects
+            if (!(children instanceof Array) && typeof children === "object") {
+                // is object. 
+                if (children.key) {
+                    // object is an orgChart object
+                    children = [children];
+                } else {
+                    //try to convert values to array
+                    children = Object.values(children);
+                }
+            }
+            if (!(children instanceof Array)) children = [];
+
+            // create branches
+            if (children.length > 0) {
+                // this item has subs
+
+                // is array of arrays?
+                if (children[0] instanceof Array) {
+                    // sub is array of arrays
+                    for (var i = 0; i < children.length; i++) {
+                        var $branch = createBranch(children[i] || [], type);
+
+                        if ($branch) $frag.append($branch);
+                    }
+                } else {
+                    // sub is array of objects
+                    var $branch = createBranch(children, type);
+
+                    if ($branch) $frag.append($branch)
+                }
+            }
+
+            return $frag.children();
         }
         function createLeaf(item, isSubBranch) {
             /// <summary>Creates the Org Chart leafs.</summary>  
@@ -403,16 +439,26 @@
             }]);
             return $div;
         }
-        function balanceLeavesOnSubBranches() {
+        function balanceLeavesOnBranches() {
             /// <summary>Makes the left and right sides of the subbranch the same width.
             /// Centers the tree horizontally.</summary >  
 
+            if (orientation !== "horizontal") return;
+
             // loop thru each of subbranches.
-            $(".org-chart-subbranch", $container).each(function () {
+            $(".org-chart-tree:not(:last-child)", $container).each(function () {
+                $(this).addClass("org-chart-balanced");
+
                 // get all the LI elements
-                var $subBranches = $("> .org-chart-item", $(this));
+                var $branches = $("> .org-chart-item", $(this));
                 // balance only if even amount
-                if (($subBranches.length % 2) === 0) balanceLeaves($subBranches);
+                if (($branches.length % 2) !== 0) {
+                    var $hiddenLeaf = createSibling({ "key": "", "title": "", "parent": "" });
+                    $hiddenLeaf.addClass("org-chart-hidden");
+                    $(this).append($hiddenLeaf);
+                    $branches = $("> .org-chart-item", $(this));
+                }
+                balanceLeaves($branches);
             });
         }
         function balanceLeaves($branch) {
@@ -920,6 +966,59 @@
             });
             return highest;
         }
+        function rowLimits(num, _max) {
+            /// <summary>Get the number of tree items per row.</summary>
+            /// <param name="num" type="Number">Number of items in the row.</param>
+            /// <param name="_max" type="Number">Optional. Even integer greater than 2. Sets the maximum row limit. Default: 6;</param>
+            /// <return type="Array">Array with limits for each row in the tree.</return>
+
+            // set default
+            if (typeof _max !== "number") _max = 6;
+            if (_max % 2 !== 0) {
+                _max = Math.floor(_max) - 1;
+            }
+            _max = Math.max(_max, 2);
+            if (typeof num !== "number") return [_max];
+            num = Math.max(Math.ceil(num), 0);
+
+            var max = _max,
+                min = Math.max(max - 2, 2),
+                odd = max - 1,
+                isOdd = false,
+                row = [],
+                orig = num,
+                sort = function (a, b) { return a - b; };
+
+            if ((num - odd) > min && (num % 2) === 1) {
+                isOdd = true;
+                num -= odd;
+            }
+            while (num > 0) {
+                if (num <= max) {
+                    row.sort(sort);
+                    row.push(num);
+                    num -= num;
+                } else if ((num % max) === 0) {
+                    row.push(max);
+                    num -= max;
+                } else if ((num % min) === 0) {
+                    row.push(min);
+                    num -= min;
+                } else {
+                    if (Math.abs(min - (num - min)) < Math.abs(max - (num - max))) {
+                        row.push(min);
+                        num -= min;
+                    } else {
+                        row.push(max);
+                        num -= max;
+                    }
+                }
+            }
+            if (orig > (2 * min)) row.sort(sort);
+            if (isOdd) row.push(odd);
+            return row;
+        }
+
         function executeCallback(key, args, instance) {
             /// <summary>Execute a callback function.</summary>  
             /// <param name="key" type="String">Callback to execute</param>  

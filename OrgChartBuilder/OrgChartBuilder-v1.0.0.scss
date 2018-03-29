@@ -18,6 +18,8 @@
 $color: #fff;
 $background: rgba(73,155,234,1);
 $background-bottom: rgba(0,95,196,1);
+$background-sub: rgba(158, 0, 235, 1);
+$background-sub-bottom: rgba(88, 0, 165,1);
 
 $leaf-width: 120px;
 $leaf-height: 4em;
@@ -47,6 +49,10 @@ $line-width: 2px;
 .org-chart-subbranch {
     display: inline-block;
     padding: 0 0 0 ($leaf-padding-left / 2);
+
+    .org-chart-leaf {
+        @include linear-gradient($background-sub, $background-sub-bottom);
+    }
 }
 
 .org-chart-horizontal {
@@ -64,12 +70,12 @@ $line-width: 2px;
     .org-chart-root {
         padding: 0;
     }
-    .org-chart-subbranch > li > .org-chart-branch {
+    .org-chart-tree > li > .org-chart-tree:first-of-type {
         padding-left: $leaf-width + $leaf-padding-left;
     }
 }
-/**********************/
 
+/**********************/
 /** item - LI **/
 .org-chart-item {
     margin: 0;
@@ -103,7 +109,7 @@ $line-width: 2px;
     border: $line-width solid $line-color;
     @include border-radius(5px);
     color: $color;
-    @include linear-gradient($background, $background-bottom)
+    @include linear-gradient($background, $background-bottom);
 }
 .org-chart-horizontal {
     .org-chart-leaf {
