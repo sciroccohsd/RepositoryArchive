@@ -283,10 +283,13 @@
                     sets.push(tempArr);
                 } else {
                     for (var n = 0; n < breaks.length; n++) {
+                        var arr2;
                         if (n !== breaks.length - 1) {
-                            sets.unshift(tempArr.splice(breaks[n]));
+                            arr2 = tempArr.splice(breaks[n]);
+                            sets.push(tempArr.slice(0));
+                            tempArr = arr2;
                         } else {
-                            sets.unshift(tempArr);
+                            sets.push(tempArr);
                         }
                     }
                 }
