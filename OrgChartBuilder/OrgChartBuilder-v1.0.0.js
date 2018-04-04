@@ -22,13 +22,16 @@
                 "scaleToFit": false,
                 "scale": 1,
                 "gap": 10,
-                "breakOn": 0
+                "breakOn": 0,
+                "levels": 0 // 0 = do not limit levels
             },
             orientation = defaults.orientation,
             scaleToFit = defaults.scaleToFit,
             scale = defaults.scale,
             gap = defaults.gap,
             breakOn = defaults.breakOn,
+            levels = defaults.levels,
+            levelCount = 0,
             css = {
                 "wrapper": "",
                 "tree": "",
@@ -109,6 +112,11 @@
                     case "breakon":
                     case "breakOn":
                         if (valueType === "number" && value >= 2) breakOn = value;
+                        break;
+
+                    case "level":
+                    case "levels":
+                        if (valueType === "number" && value >= 0) levels = value;
                         break;
 
                     case "class":
@@ -208,7 +216,8 @@
             /// <summary>Renders the Org Chart based on the dataset.</summary>  
 
             // reset cached objects
-            $svg = null;  
+            $svg = null;
+            levelCount = 0;
             
             var svg = createXmlElement('svg', { "id": "org-chart-connectors", "class": "org-chart-connectors" }),
                 $root = createBranch(data, "root");
@@ -250,6 +259,10 @@
                 default:
                     type = "branch";
             }
+
+            // limit the amount of levels
+            if (levels > 0 && levelCount >= levels) return;
+            if (type === "branch") levelCount++;
 
             // convert object of orgChart objects to array of orgChart objects
             if (!(items instanceof Array) && typeof items === "object") {
@@ -378,6 +391,7 @@
                 if (children[0] instanceof Array) {
                     // sub is array of arrays
                     for (var i = 0; i < children.length; i++) {
+
                         var $branch = createBranch(children[i] || [], type);
 
                         if ($branch) $frag.append($branch);
