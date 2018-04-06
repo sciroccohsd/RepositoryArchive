@@ -17,7 +17,7 @@
 .org-chart-subbranch {
   display: inline-block;
   padding: 0 0 0 15px; }
-  .org-chart-subbranch .org-chart-leaf {
+  .org-chart-subbranch > .org-chart-item > .org-chart-leaf {
     background: #9e00eb;
     /* Old browsers */
     background: -moz-linear-gradient(top, #9e00eb 0%, #5800a5 100%);
@@ -149,6 +149,9 @@
   fill: none;
   stroke: #444;
   stroke-width: 2px; }
+
+.org-chart-connector-dotted {
+  stroke-dasharray: 3, 2; }
 
 /**********************/
 

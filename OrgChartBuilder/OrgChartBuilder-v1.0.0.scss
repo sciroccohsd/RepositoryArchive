@@ -50,7 +50,7 @@ $line-width: 2px;
     display: inline-block;
     padding: 0 0 0 ($leaf-padding-left / 2);
 
-    .org-chart-leaf {
+    > .org-chart-item > .org-chart-leaf {
         @include linear-gradient($background-sub, $background-sub-bottom);
     }
 }
@@ -172,5 +172,8 @@ $line-width: 2px;
     fill: none;
     stroke: $line-color;
     stroke-width: $line-width;
+}
+.org-chart-connector-dotted {
+    stroke-dasharray: 3, 2;
 }
 /**********************/

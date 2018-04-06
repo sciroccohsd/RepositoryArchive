@@ -22,16 +22,19 @@
                 "scaleToFit": false,
                 "scale": 1,
                 "gap": 10,
-                "breakOn": 0,
-                "levels": 0 // 0 = do not limit levels
+                "maxLeafsPerRow": 0,
+                "levels": 0, // 0 = do not limit levels
+                "showSubs": true,
+                "showChildren": true
             },
             orientation = defaults.orientation,
             scaleToFit = defaults.scaleToFit,
             scale = defaults.scale,
             gap = defaults.gap,
-            breakOn = defaults.breakOn,
+            maxLeafsPerRow = defaults.maxLeafsPerRow,
             levels = defaults.levels,
-            levelCount = 0,
+            showSubs = defaults.showSubs,
+            showChildren = defaults.showChildren,
             css = {
                 "wrapper": "",
                 "tree": "",
@@ -108,15 +111,28 @@
                         if (valueType === "number" && value >= 0) gap = value;
                         break;
 
-                    case "break":
-                    case "breakon":
-                    case "breakOn":
-                        if (valueType === "number" && value >= 2) breakOn = value;
+                    case "maxleafs":
+                    case "maxLeafs":
+                    case "leafsperrow":
+                    case "leafsPerRow":
+                    case "maxleafsperrow":
+                    case "maxLeafsPerRow":
+                        if (valueType === "number" && value >= 2) maxLeafsPerRow = value;
                         break;
 
                     case "level":
                     case "levels":
                         if (valueType === "number" && value >= 0) levels = value;
+                        break;
+
+                    case "showchildren":
+                    case "showChildren":
+                        if (valueType === "boolean") showChildren = value;
+                        break;
+
+                    case "showsubs":
+                    case "showSubs":
+                        if (valueType === "boolean") showSubs = value;
                         break;
 
                     case "class":
@@ -217,7 +233,6 @@
 
             // reset cached objects
             $svg = null;
-            levelCount = 0;
             
             var svg = createXmlElement('svg', { "id": "org-chart-connectors", "class": "org-chart-connectors" }),
                 $root = createBranch(data, "root");
@@ -243,7 +258,7 @@
             resize();
 
         }
-        function createBranch(items, type) {
+        function createBranch(items, type, count) {
             /// <summary>Creates the tree and children.</summary>
             /// <param name="items" type="Array">Array of item objects.</param>
             /// <param name="type" type="String">Optional. Type of branch: "root", "branch" or "subbranch". Default: "branch";</param>
@@ -260,9 +275,9 @@
                     type = "branch";
             }
 
-            // limit the amount of levels
-            if (levels > 0 && levelCount >= levels) return;
-            if (type === "branch") levelCount++;
+            if (typeof count !== "number") count = 0;
+            if (type !== "root") count++;
+            if (levels > 0 && count > levels) return;
 
             // convert object of orgChart objects to array of orgChart objects
             if (!(items instanceof Array) && typeof items === "object") {
@@ -279,6 +294,7 @@
 
             // compile css classes for this element
             var classes = ["org-chart-tree"];
+            classes.push("org-chart-item-level-" + count);
             if (css.tree) classes.push(css.tree);
             classes.push("org-chart-" + type);
             if (css[type]) classes.push(css[type]);
@@ -289,9 +305,9 @@
                 sets = [],
                 tempArr = items.slice(0);
 
-            // create sets based on row breaks
-            if (breakOn >= 2 && orientation === "horizontal") {
-                var breaks = rowLimits(tempArr.length, breakOn);
+            // breaks leaf sets according to row limits
+            if (maxLeafsPerRow >= 2 && orientation === "horizontal") {
+                var breaks = rowLimits(tempArr.length, maxLeafsPerRow);
                 if (breaks.length === 1) {
                     sets.push(tempArr);
                 } else {
@@ -317,9 +333,11 @@
                 var set = sets[i],
                     $ul = $('<ul />', { "class": classes.join(" ") });
 
+                $ul.data("level", count);
+
                 // loop thru each tree item
                 for (var ii = 0; ii < set.length; ii++) {
-                    var $li = createSibling(set[ii], isSubBranch);
+                    var $li = createSibling(set[ii], isSubBranch, count);
                     if ($li) $ul.append($li);
 
                 }
@@ -334,19 +352,22 @@
             if ($frag.children().length > 0) return $frag.children();
             return;
         }
-        function createSibling(item, isSubBranch) {
+        function createSibling(item, isSubBranch, count) {
             /// <summary>Creates the LI element for a single item and its children.</summary>  
             /// <param name="item" type="Object">Item object</param>  
             /// <param name="isSubBranch" type="Boolean">Optional. If true, this branch is a subbranch. Default: false;</param>
             /// <returns type="Object">jQuery LI element.</returns>
 
             // normalize parameters
-            if (typeof isSubBranch === "boolean") isSubBranch = false;
+            if (typeof isSubBranch !== "boolean") isSubBranch = false;
 
-            var $li = $('<li />', { "id": id + "-org-chart-item-" + item.key, "class": "org-chart-item " + css.item }),
+            var $li = $('<li />', {
+                "id": id + "-org-chart-item-" + item.key,
+                "class": "org-chart-item " + css.item
+            }),
                 $leaf = createLeaf(item, isSubBranch),
-                $subs = makeBranches(item.sub || [], "subbranch"),
-                $children = makeBranches(item.children || [], "branch");
+                $subs = (showSubs) ? makeBranches(item.sub || [], "subbranch", count) : null,
+                $children = (showChildren) ? makeBranches(item.children || [], "branch", count) : null;
 
             // add leaf to item
             $li.append($leaf);
@@ -362,7 +383,7 @@
             }]);
             return $li;
         }
-        function makeBranches(children, type) {
+        function makeBranches(children, type, count) {
             /// <summary>Parses the children/sub data to makes one or more branches.</summary>  
             /// <param name="children" type="Array">Array of org chart objects or array of arrays of org chart objects.</param>  
             /// <param name="type" type="String">Type of branch. e.g.: "branch" or "subbranch"</param>  
@@ -392,13 +413,13 @@
                     // sub is array of arrays
                     for (var i = 0; i < children.length; i++) {
 
-                        var $branch = createBranch(children[i] || [], type);
+                        var $branch = createBranch(children[i] || [], type, count);
 
                         if ($branch) $frag.append($branch);
                     }
                 } else {
                     // sub is array of objects
-                    var $branch = createBranch(children, type);
+                    var $branch = createBranch(children, type, count);
 
                     if ($branch) $frag.append($branch)
                 }
@@ -430,7 +451,12 @@
                 $label = $('<div />', { "class": "org-chart-title" }).text(item.title || "");
 
             // keep key and parent metadata
-            $div.data({ "key": item.key, "parent": item.parent, "isSubBranch": isSubBranch });
+            $div.data({
+                "key": item.key,
+                "parent": item.parent,
+                "isSubBranch": isSubBranch,
+                "cssLine": (item.css && item.css.line) ? item.css.line : ""
+            });
 
             // put the leaf together
             $a.append($label);
@@ -463,7 +489,7 @@
         }
         function balanceLeavesOnBranches() {
             /// <summary>Makes the left and right sides of the subbranch the same width.
-            /// Centers the tree horizontally.</summary >  
+            /// Centers the tree horizontally.</summary>
 
             if (orientation !== "horizontal") return;
 
@@ -549,10 +575,13 @@
 
                 $line = connectorLine({
                     "parent": {
+                        "key": parentKey,
                         "$": $parentLeaf,
                         "position": (isHorizontal()) ? "bottom center" : "right center"
                     },
                     "child": {
+                        "key": $leaf.data("key"),
+                        "cssLine": $leaf.data("cssLine"),
                         "$": $leaf,
                         "position": (isHorizontal()) ? "top center" : "left center"
                     }
@@ -588,7 +617,10 @@
                 // child position = [x, y]
                 child = getPosition(prop.child.$, prop.child.position),
                 // breaks
-                breaks = [];
+                breaks = [],
+                classes = ["org-chart-connector"];
+            if (css.line) classes.push(css.line);
+            if (prop.child.cssLine) classes.push(prop.child.cssLine);
 
             // add parent position
             points.push(parent.join(","));
@@ -598,7 +630,12 @@
             // add child position
             points.push(child.join(","));
 
-            return createXmlElement('polyline', { "points": points.join(" "), "class": "org-chart-connector " + css.line });
+            return createXmlElement('polyline', {
+                "points": points.join(" "),
+                "class": classes.join(" "),
+                "data-parent": prop.parent.key,
+                "data-child": prop.child.key
+            });
 
         }
         function getPosition($elem, alignment) {
@@ -802,33 +839,40 @@
             // NOTE: redrawing SVG is only needed if tree is centered
             redrawConnectorLines();
 
-            if (scaleToFit) scaleChartToFit();
-
-            // resize the SVG container
-            setSvgWidth();
-            setSvgHeight();
+            if (scaleToFit) {
+                scaleChartToFit();
+            } else {
+                // resize the SVG container
+                //resizeContainerWidth();
+                //resizeContainerHeight();
+            }
 
             executeCallback("resize");
             return _this;
         }
-        function setSvgWidth() {
-            /// <summary>Sets the width of the SVG element to the widest LI. 
-            /// Ensures connector lines are visible for the entire org chart.</summary >  
+        function resizeContainerWidth() {
+            /// <summary>Sets the width of the SVG and wrapper containers to the widest LI. 
+            /// Ensures connector lines are visible for the entire org chart.</summary>  
 
             var widestTree = getWidestWidth(".org-chart-branch"),
-                widestItem = getWidestWidth(".org-chart-item");
+                widestItem = getWidestWidth(".org-chart-item"),
+                width = Math.max(widestTree, widestItem) * scale;
 
             // set width as widt as the widest element or container
-            get("svg").width(Math.max(widestTree, widestItem) * scale);
+            get("svg").width(width);
+            $wrapper.width(width);
         }
-        function setSvgHeight() {
-            /// <summary>Sets the width of the SVG element to the widest LI.  Ensures connector lines are visible for the entire org chart.</summary>
+        function resizeContainerHeight() {
+            /// <summary>Sets the width of the SVG and wrapper containers to the widest LI. 
+            /// Ensures connector lines are visible for the entire org chart.</summary>
 
             var tallestTree = getTallestHeight(".org-chart-tree"),
-                tallestItem = getTallestHeight(".org-chart-item");
+                tallestItem = getTallestHeight(".org-chart-item"),
+                height = Math.max(tallestTree, tallestItem) * scale;
 
             // set height as high as the tallest element or container
-            get("svg").height(Math.max(tallestTree, tallestItem) * scale);
+            get("svg").height(height);
+            $wrapper.height(height);
         }
 
         // NOTE: redrawing SVG does not work with scaling
@@ -921,8 +965,8 @@
             }
 
             // resize the SVG container
-            setSvgWidth();
-            setSvgHeight();
+            resizeContainerWidth();
+            resizeContainerHeight();
 
             executeCallback("scaleChartTo", [_scale]);
             return _this;
