@@ -1,0 +1,163 @@
+﻿@mixin prefix($property, $value){
+    $prefix: (o ms moz webkit);
+    @each $pre in $prefix {
+        #{"-" + $pre + "-" + $property}: $value;
+    }
+    #{$property}: $value;
+}
+
+$ns: "simple-carousel";
+
+$unit: 4px;
+$nav-bgcolor: rgba(0, 0, 0, .65);
+$nav-color: #fff;
+$nav-height: 6 * $unit;
+
+
+.#{$ns}-container {
+    display: block !important;
+    position: relative !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+
+    > ul.#{$ns}-list {
+        display: block !important;
+        list-style-type: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+
+        > li.#{$ns}-slide {
+            display: none !important;
+            position: absolute !important;
+
+            &.#{$ns}-focus,
+            &.#{$ns}-next-focus {
+                display: block !important;
+            }
+        }
+
+    }
+
+    &:hover .#{$ns}-nav-autohide {
+        display: table;
+    }
+
+    &.#{$ns}-nav-append {
+        padding-bottom: $nav-height !important;
+    }
+}
+
+/** Navigation Elements **/
+%nav-cell {
+    display: table-cell;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    height: $nav-height;
+    overflow: hidden;
+}
+%nav-direction {
+    font-size: $nav-height;
+    height: $nav-height;
+    padding: 0;
+}
+
+.#{$ns}-nav-container {
+    display: table;
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    bottom: 0;
+
+    &.#{$ns}-nav-autohide {
+        display: none;
+    }
+
+    /* NAVIGATION BAR */
+    > .#{$ns}-nav-bar {
+        display: table-row;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        background-color: $nav-bgcolor;
+        color: $nav-color;
+
+        /* NAVIGATION NEXT */
+        > .#{$ns}-nav-next-container {
+            @extend %nav-cell;
+            position: relative;
+            width: $nav-height;
+            line-height: $nav-height;
+            vertical-align: middle;        
+
+            > div.#{$ns}-nav-next {
+                @extend %nav-direction;
+                
+                &:before {
+                    content: "\25B8";
+                    display: inline-block;
+                    cursor: pointer;
+                }
+            }
+        }
+
+        /* NAVIGATION PREVIOUS */
+        > .#{$ns}-nav-prev-container {
+            @extend %nav-cell;
+            width: $nav-height;
+            line-height: $nav-height;
+            vertical-align: middle;        
+
+            > div.#{$ns}-nav-prev {
+                @extend %nav-direction;
+
+                &:before {
+                    content: "\25C2";
+                    display: inline-block;
+                    cursor: pointer;
+                }
+            }
+        }
+
+        /* NAVIGATION DOTS */
+        > .#{$ns}-nav-dots-container {
+            @extend %nav-cell;
+            width: 100%;
+            vertical-align: bottom;
+
+            > ul.#{$ns}-nav-dots {
+                display: block;
+                margin: 0 0 (-2 * $unit) 0;
+                padding: 0;
+                list-style: none;
+                white-space: nowrap;
+                overflow: hidden;
+                height: $nav-height;
+
+                > li.#{$ns}-nav-dot {
+                    display: inline-block;
+                    width: 2 * $unit;
+                    height: 2 * $unit;
+                    margin: 0 (.5 * $unit);
+                    padding: 0;
+                    background-color: $nav-bgcolor;
+                    border: 1px solid $nav-color;
+                    border-radius: 100%;
+                    box-shadow: 0 0 (2 * $unit) 1px #000;
+                    cursor: pointer;
+
+                    &:before {
+                        content: ".";
+                        color: transparent;
+                    }
+
+                    &.#{$ns}-nav-dot-active {
+                        background-color: $nav-color;
+                        @include prefix(transition, all 1s ease);
+                    }
+                }
+            }
+        }
+    }
+}

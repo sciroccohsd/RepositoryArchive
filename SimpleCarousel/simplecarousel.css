@@ -1,0 +1,103 @@
+.simple-carousel-container {
+  display: block !important;
+  position: relative !important;
+  padding: 0 !important;
+  overflow: hidden !important; }
+  .simple-carousel-container > ul.simple-carousel-list {
+    display: block !important;
+    list-style-type: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%; }
+    .simple-carousel-container > ul.simple-carousel-list > li.simple-carousel-slide {
+      display: none !important;
+      position: absolute !important; }
+      .simple-carousel-container > ul.simple-carousel-list > li.simple-carousel-slide.simple-carousel-focus, .simple-carousel-container > ul.simple-carousel-list > li.simple-carousel-slide.simple-carousel-next-focus {
+        display: block !important; }
+  .simple-carousel-container:hover .simple-carousel-nav-autohide {
+    display: table; }
+  .simple-carousel-container.simple-carousel-nav-append {
+    padding-bottom: 24px !important; }
+
+/** Navigation Elements **/
+.simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-next-container, .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-prev-container, .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-dots-container {
+  display: table-cell;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  height: 24px;
+  overflow: hidden; }
+
+.simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-next-container > div.simple-carousel-nav-next, .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-prev-container > div.simple-carousel-nav-prev {
+  font-size: 24px;
+  height: 24px;
+  padding: 0; }
+
+.simple-carousel-nav-container {
+  display: table;
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  bottom: 0;
+  /* NAVIGATION BAR */ }
+  .simple-carousel-nav-container.simple-carousel-nav-autohide {
+    display: none; }
+  .simple-carousel-nav-container > .simple-carousel-nav-bar {
+    display: table-row;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    /* NAVIGATION NEXT */
+    /* NAVIGATION PREVIOUS */
+    /* NAVIGATION DOTS */ }
+    .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-next-container {
+      position: relative;
+      width: 24px;
+      line-height: 24px;
+      vertical-align: middle; }
+      .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-next-container > div.simple-carousel-nav-next:before {
+        content: "\25B8";
+        display: inline-block;
+        cursor: pointer; }
+    .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-prev-container {
+      width: 24px;
+      line-height: 24px;
+      vertical-align: middle; }
+      .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-prev-container > div.simple-carousel-nav-prev:before {
+        content: "\25C2";
+        display: inline-block;
+        cursor: pointer; }
+    .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-dots-container {
+      width: 100%;
+      vertical-align: bottom; }
+      .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-dots-container > ul.simple-carousel-nav-dots {
+        display: block;
+        margin: 0 0 -8px 0;
+        padding: 0;
+        list-style: none;
+        white-space: nowrap;
+        overflow: hidden;
+        height: 24px; }
+        .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-dots-container > ul.simple-carousel-nav-dots > li.simple-carousel-nav-dot {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          margin: 0 2px;
+          padding: 0;
+          background-color: rgba(0, 0, 0, 0.65);
+          border: 1px solid #fff;
+          border-radius: 100%;
+          box-shadow: 0 0 8px 1px #000;
+          cursor: pointer; }
+          .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-dots-container > ul.simple-carousel-nav-dots > li.simple-carousel-nav-dot:before {
+            content: ".";
+            color: transparent; }
+          .simple-carousel-nav-container > .simple-carousel-nav-bar > .simple-carousel-nav-dots-container > ul.simple-carousel-nav-dots > li.simple-carousel-nav-dot.simple-carousel-nav-dot-active {
+            background-color: #fff;
+            -o-transition: all 1s ease;
+            -ms-transition: all 1s ease;
+            -moz-transition: all 1s ease;
+            -webkit-transition: all 1s ease;
+            transition: all 1s ease; }
